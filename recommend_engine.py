@@ -1,24 +1,3 @@
-"""
-recommend_engine.py
-Configurable item-to-item recommendation engine for ablation experiments.
-
-This generalises recommend_i2i.py so every method can be toggled independently:
-
-  candidate_mode  : how the user's I2I query is built
-                      "avg" -> single weighted-average vector over liked items
-                      "qe"  -> query expansion: one weighted vector per liked
-                               item, candidates merged by item weight
-                    (both use weighted business embeddings; weight = rating * recency)
-  use_hybrid      : blend I2I with popularity by alpha = min(1, n_reviews / scale)
-  pop_only        : pure-popularity baseline (ignores I2I entirely)
-  use_mmr         : Maximal Marginal Relevance rerank vs plain relevance sort
-  mmr_lambda      : 1.0 = pure relevance, 0.0 = pure diversity
-
-The expensive part (cosine over the full item matrix) depends only on the
-user and candidate_mode, so it is split into score_user() (cacheable) and
-rank() (cheap, runs per config). experiment_mmr.py exploits this.
-"""
-
 import os
 import numpy as np
 import pandas as pd

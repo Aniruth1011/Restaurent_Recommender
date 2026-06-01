@@ -10,6 +10,7 @@ Inference flow:
   5. Rerank by similarity + popularity
 """
 
+import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -18,7 +19,8 @@ from sklearn.preprocessing import normalize
 
 OUTPUT_DIR = Path("output_review")
 MODELS_DIR = Path("models_review")
-EMBED_DIR  = Path("embeddings_i2i")
+# Set I2I_EMBED_DIR=embeddings_i2i_learned to serve the trained encoder's embeddings.
+EMBED_DIR  = Path(os.environ.get("I2I_EMBED_DIR", "embeddings_i2i"))
 
 N_CANDIDATES   = 100   # retrieve before geo filter
 N_RECOMMENDATIONS = 20

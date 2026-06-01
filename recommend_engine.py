@@ -19,6 +19,7 @@ user and candidate_mode, so it is split into score_user() (cacheable) and
 rank() (cheap, runs per config). experiment_mmr.py exploits this.
 """
 
+import os
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field
@@ -27,7 +28,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
 
 OUTPUT_DIR = Path("output_review")
-EMBED_DIR  = Path("embeddings_i2i")
+# Embeddings served by the API/demo. Override with I2I_EMBED_DIR
+# (e.g. embeddings_i2i_content for the category model). Defaults to frozen baseline.
+EMBED_DIR  = Path(os.environ.get("I2I_EMBED_DIR", "embeddings_i2i"))
 
 N_CANDIDATES      = 200
 N_RECOMMENDATIONS = 20

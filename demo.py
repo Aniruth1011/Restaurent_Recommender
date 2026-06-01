@@ -284,6 +284,26 @@ def _render(results, lat, lon, sort_by, banner=""):
             like_p, dislike_p, pmap, results)
 
 
+def post_login_recommend(user_id, city, radius, sort_by):
+    """Right after login, auto-show recommendations so a returning user lands on
+    personalised picks (from history/likes) without having to hit Find. New users
+    with no history fall back to popular picks."""
+    if not user_id or not user_id.strip():
+        return tuple(gr.update() for _ in range(6))   # leave all _disc_outputs unchanged
+    try:
+        results, lat, lon = _do_recommend(
+            user_id, [], city, radius, "Any",
+            False, False, False, False, False, False, False, False, False)
+    except Exception as e:
+        return (f"<div style='color:#ff6b35;padding:16px'>⚠️ {e}</div>", "", *_empty_picks(), [])
+    if not results:
+        return ("<div style='color:#7a7a99;padding:20px'>Pick a few cuisines and hit "
+                "<b>Find restaurants</b> to get started.</div>", "", *_empty_picks(), [])
+    banner = (f"<div style='color:#7a7a99;font-size:12px;margin-bottom:10px'>"
+              f"🧠 {_source_tag(results)}</div>")
+    return _render(results, lat, lon, sort_by, banner=banner)
+
+
 def discover_fn(user_id, cuisines, city, radius, price, alcohol, outdoor, wheelchair,
                 kid, music, resv, vegan, veg, gf, sort_by):
     if not user_id or not user_id.strip():
@@ -458,7 +478,9 @@ def build_ui():
                 _disc_outputs = [dc_res, dc_map, dc_likes, dc_dislikes, dc_pickmap, dc_results]
 
                 dc_login_btn.click(login_fn, [dc_name, dc_id],
-                                   [dc_uid, dc_login_status, dc_app])
+                                   [dc_uid, dc_login_status, dc_app]).then(
+                    post_login_recommend, [dc_uid, dc_city, dc_radius, dc_sort],
+                    _disc_outputs)
                 dc_btn.click(discover_fn, inputs=_disc_inputs, outputs=_disc_outputs)
                 dc_sort.change(resort_fn, inputs=[dc_results, dc_sort],
                                outputs=[dc_res, dc_map, dc_likes, dc_dislikes, dc_pickmap])

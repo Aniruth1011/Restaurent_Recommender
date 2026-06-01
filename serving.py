@@ -174,16 +174,42 @@ def build_cold_start_vector(prefs):
     return normalize(emb[idxs].mean(axis=0).reshape(1, -1), norm="l2")
 
 
-def query_scores(qvec, seen, passes_geo, n_candidates=N_CANDIDATES):
-    """Cosine of a query vector over all item embeddings -> top geo-valid candidates."""
+def query_scores(qvec, seen, passes_geo, n_candidates=N_CANDIDATES, allowed=None):
+    """Cosine of a query vector over all item embeddings -> top geo-valid candidates.
+
+    If `allowed` is given, rank within that set (cuisine/hard-filter) BEFORE
+    truncating, so an explicit cuisine request returns that cuisine ranked by the
+    user's taste - not an empty list because the global top-N were other cuisines.
+    """
     emb, item_ids, id_to_idx = _G["emb"], _G["item_ids"], _G["id_to_idx"]
     scores = cosine_similarity(qvec, emb)[0]
     for gid in seen:
         i = id_to_idx.get(gid)
         if i is not None:
             scores[i] = -1.0
-    top = np.argsort(scores)[::-1][:n_candidates]
-    return {item_ids[i]: float(scores[i]) for i in top if passes_geo(item_ids[i])}
+    out = {}
+    for i in np.argsort(scores)[::-1]:
+        gid = item_ids[i]
+        if allowed is not None and gid not in allowed:
+            continue
+        if not passes_geo(gid):
+            continue
+        out[gid] = float(scores[i])
+        if len(out) >= n_candidates:
+            break
+    return out
+
+
+def _cuisine_ids(cuisines):
+    """gmap_ids matching any of the requested cuisines, or None if no usable cuisine."""
+    if not cuisines:
+        return None
+    restaurants = _G["restaurants"]
+    cats = [c for cu in cuisines for c in CUISINE_TO_CATS.get(cu, [])]
+    cats = [c for c in cats if c in restaurants.columns]
+    if not cats:
+        return None
+    return set(restaurants[restaurants[cats].max(axis=1) > 0]["gmap_id"])
 
 
 # ── hard filters ──────────────────────────────────────────────────────────────
@@ -260,6 +286,16 @@ def recommend(user_id=None, prefs=None, filters=None,
     restaurants = _G["restaurants"]
     passes_geo = _make_geo_filter(_G["rest_locs"], user_lat, user_lon, max_miles)
 
+    # Allowed candidate set from hard filters + explicit cuisine request. An
+    # explicit cuisine steers the result ("show me Indian" -> Indian) even when
+    # the user's taste profile points elsewhere (e.g. Thai/Japanese).
+    allowed = None
+    if filters:
+        allowed = set(apply_filters(restaurants, filters)["gmap_id"])
+    cuisine_ids = _cuisine_ids((prefs or {}).get("cuisines"))
+    if cuisine_ids is not None:
+        allowed = cuisine_ids if allowed is None else (allowed & cuisine_ids)
+
     source = "popularity"
     # 1. dataset history
     if user_id and user_id in _G["dataset_users"]:
@@ -285,15 +321,14 @@ def recommend(user_id=None, prefs=None, filters=None,
             qvec = build_cold_start_vector(prefs)
             if qvec is not None:
                 source = "cold_start"
-        i2i_raw = query_scores(qvec, seen, passes_geo) if qvec is not None else {}
+        i2i_raw = query_scores(qvec, seen, passes_geo, allowed=allowed) if qvec is not None else {}
         pop_raw = popularity_scores(restaurants, seen, passes_geo)
         # full I2I weight for synthesized vectors (alpha = n_reviews/scale)
         n_reviews = _CFG.alpha_scale if qvec is not None else 0
         scored = {"seen": seen, "i2i_raw": i2i_raw, "pop_raw": pop_raw, "n_reviews": n_reviews}
 
-    # hard filters: restrict candidate id sets
-    if filters:
-        allowed = set(apply_filters(restaurants, filters)["gmap_id"])
+    # restrict candidate id sets to the allowed (filters + cuisine) set
+    if allowed is not None:
         scored["i2i_raw"] = {g: v for g, v in scored["i2i_raw"].items() if g in allowed}
         scored["pop_raw"] = {g: v for g, v in scored["pop_raw"].items() if g in allowed}
 

@@ -1,31 +1,3 @@
-"""
-train_i2i_content.py
-CONTENT-supervised deep item encoder (deep learning applied to content, NOT interactions).
-
-Rationale:
-  The interaction signal is far too sparse to train on (~8K co-like pairs; see
-  train_i2i_encoder.py, which never beats the frozen baseline). But the CONTENT
-  side is abundant: 80,715 restaurants, every one labeled, 160 categories with
-  >=20 members -> effectively unlimited training pairs. So we apply deep learning
-  where the data actually is: learn an embedding in which restaurants that share
-  a cuisine/category are close.
-
-  Positive pair = two restaurants sharing a SPECIFIC category (the generic
-  "Restaurant" tag is dropped so the model learns real cuisine structure, not the
-  catch-all). Trained with in-batch contrastive loss on the residual encoder
-  (output = normalize(x + gate*delta(x))) + anchor loss, so content structure is
-  preserved and only refined.
-
-  Honest caveat: eval_i2i.py's metrics are category/chain based, so a category-
-  trained encoder is partly ALIGNED with the eval (unlike the interaction model).
-  Watch the CHAIN metrics especially - chains are not the training label, so a
-  chain-metric lift is the least circular evidence that this helped.
-
-Run:
-  python train_i2i_content.py
-  I2I_EMBED_DIR=embeddings_i2i_content python eval_i2i.py
-"""
-
 import ast
 import numpy as np
 import pandas as pd

@@ -1,16 +1,3 @@
-"""
-eval_cold.py
-Cold start evaluation using item-to-item similarity.
-Cold users have no train history — we use their cold_start reviews
-as if they just signed up and rated 1-2 places.
-
-Strategy:
-  - Split each cold user's reviews into "seed" (first half) and "held out" (second half)
-  - Use seed reviews to build user vector (I2I)
-  - Evaluate against held out reviews
-  - Compare against popularity baseline
-"""
-
 import numpy as np
 import pandas as pd
 from pathlib import Path

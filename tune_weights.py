@@ -1,29 +1,3 @@
-"""
-tune_weights.py
-Learn the optimal final-score weights (w_hybrid, w_rating, w_pop) instead of
-fixing them at 0.6/0.2/0.2.
-
-The final relevance score is:
-    relevance = w_hybrid * combined_i2i_pop
-              + w_rating * rating_score
-              + w_pop    * popularity_score
-
-Because the objective (chain NDCG) is a non-differentiable ranking metric, we
-do a direct grid search over the weight simplex (w_hybrid + w_rating + w_pop = 1)
-and keep the vector that maximises chain NDCG.
-
-To avoid reporting numbers we optimised on, evaluable users are split 50/50:
-  - VAL  half  -> used to PICK the best weights
-  - TEST half  -> used to REPORT the chosen weights (held out)
-We also report the fixed 0.6/0.2/0.2 baseline on the same TEST half for a fair
-apples-to-apples comparison.
-
-Usage:
-    python tune_weights.py                 # 500 users, step=0.1
-    python tune_weights.py 200 0.1         # 200 users, grid step 0.1
-    python tune_weights.py 500 0.05 7      # finer grid, K=7
-"""
-
 import sys
 import numpy as np
 import pandas as pd

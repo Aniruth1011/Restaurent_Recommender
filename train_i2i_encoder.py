@@ -1,39 +1,3 @@
-"""
-train_i2i_encoder.py
-Deep item-to-item encoder for an extreme cold-start dataset (~1 review/user).
-
-Why this design:
-  The data has a median of 1 review per user, so per-user models (NCF, sequential,
-  user-embedding two-towers) have nothing to learn. The only trainable signal is
-  ITEM-to-ITEM: "people who liked A also liked B". We learn a projection of the
-  existing 567-dim content vectors (frozen MiniLM text + structured features) into
-  a space where co-liked restaurants are close, using a Siamese encoder trained
-  with in-batch contrastive loss (InfoNCE / CLIP-style).
-
-  RESIDUAL + ANCHOR design:
-    A plain encoder that REPLACES the content vector discards the category/chain
-    structure that already works, and (with only ~8K co-like pairs) underperforms
-    the frozen baseline. Instead we learn a RESIDUAL on top of the content vector:
-        output = normalize(x + gate * delta(x))
-    with `gate` initialized to 0, so the model STARTS exactly at the frozen
-    baseline and only moves where the co-like signal demands it. An ANCHOR loss
-        lambda * (1 - cos(output, x))
-    penalizes drifting away from the content position. lambda is swept:
-        lambda large  -> recovers the baseline (safety floor)
-        lambda small  -> co-likes nudge the space; look for a lift above baseline
-
-  Because the encoder consumes CONTENT (not a user/item id), every restaurant -
-  including never-reviewed ones - gets a learned embedding, so cold-start is
-  preserved. Output is saved in the same format as embeddings_i2i/ so it drops
-  straight into recommend_i2i.py and eval_i2i.py.
-
-Run:
-  python train_i2i_encoder.py
-Then evaluate the winning lambda against the frozen baseline:
-  python eval_i2i.py                                  # frozen baseline
-  I2I_EMBED_DIR=embeddings_i2i_learned2 python eval_i2i.py   # learned
-"""
-
 import numpy as np
 import pandas as pd
 from pathlib import Path

@@ -24,12 +24,9 @@ together. It is the best model for general cuisine-match discovery.
 | Category Hit@20 | **0.9769** |
 | Category Recall@20 | **0.9001** |
 | Category NDCG@20 | **2.2485** |
-| Chain Hit@20 | 0.0792 |
-| Chain Recall@20 | 0.0749 |
-| Chain NDCG@20 | 0.0424 |
-| Avg Rating@20 | 4.4221 |
-| Quality Frac@20 (≥4.0) | 0.8461 |
-| Diversity@20 | 1.4695 |
+| Hit@20 | 0.0792 |
+| Recall@20 | 0.0749 |
+| NDCG@20 | 0.0424 |
 
 **Headline:** the content encoder lifts ranked cuisine relevance (Category NDCG)
 **+32%** over the frozen baseline (1.70 → 2.25) and covers **90%** of the user's
@@ -114,5 +111,4 @@ I2I_EMBED_DIR=embeddings_i2i_content python eval_collaborative.py 2   # dense us
 | `train_i2i_chain.py`, `train_i2i_encoder.py` | Alternative encoders (brand / interaction) |
 | `eval_i2i.py`, `eval_collaborative.py` | Evaluation |
 
-See **`CLAUDE.md`** for the full development log: data analysis, every model
-experiment with results, and design decisions.
+

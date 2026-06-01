@@ -1,27 +1,3 @@
-"""
-eval_collaborative.py
-Companion to eval_i2i.py that restricts evaluation to DENSE users - those with
-enough training history for a collaborative (co-like) signal to plausibly help.
-
-Motivation:
-  The dataset is cold-start dominated (~1 review/user). eval_i2i.py evaluates
-  everyone, where content similarity dominates and a trained encoder cannot beat
-  frozen content embeddings. This script asks the narrower question: among users
-  who actually have a history, does the learned (co-like) embedding space help?
-
-  Reality check on this dataset (train&test overlap, >=1 relevant test item):
-      >=2 train reviews -> 103 users
-      >=3 train reviews ->  27 users
-      >=5 train reviews ->   2 users  (not enough to be meaningful)
-  So small MIN_HISTORY thresholds are the only viable ones, and results at high
-  thresholds are noisy by construction - that thinness is itself a finding.
-
-Usage:
-  python eval_collaborative.py            # default MIN_HISTORY=2
-  python eval_collaborative.py 3          # require >=3 train reviews
-  I2I_EMBED_DIR=embeddings_i2i_learned2 python eval_collaborative.py 2   # learned
-"""
-
 import sys
 import numpy as np
 import pandas as pd

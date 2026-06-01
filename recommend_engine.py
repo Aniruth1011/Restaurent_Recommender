@@ -69,16 +69,19 @@ def _rest_locs(restaurants):
 
 
 def _make_geo_filter(rest_locs, user_lat, user_lon, max_miles):
-    def passes(gid):
-        if user_lat is None or user_lon is None or max_miles is None:
-            return True
-        if gid not in rest_locs.index:
-            return False
-        row = rest_locs.loc[gid]
-        if pd.isna(row["latitude"]) or pd.isna(row["longitude"]):
-            return False
-        return haversine(user_lat, user_lon, row["latitude"], row["longitude"]) <= max_miles
-    return passes
+    """Vectorized geo filter: precompute the in-radius gmap_id set once, then test
+    O(1) set membership.
+
+    The old per-gid `rest_locs.loc[gid]` lookup made popularity_scores ~1.7s/call
+    (it ran over all ~80k rows). This computes haversine over the whole lat/lon
+    array a single time; NaN distances compare False and are excluded.
+    """
+    if user_lat is None or user_lon is None or max_miles is None:
+        return lambda gid: True
+    d = haversine(user_lat, user_lon,
+                  rest_locs["latitude"].values, rest_locs["longitude"].values)
+    in_radius = set(rest_locs.index[d <= max_miles])
+    return lambda gid: gid in in_radius
 
 
 # ── I2I candidate building (weighted) ────────────────────────────────────────

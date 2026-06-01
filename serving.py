@@ -1,19 +1,3 @@
-"""
-serving.py
-Serving layer for the demo app, built on top of recommend_engine.py (the I2I
-semantic-embedding recommender in this folder).
-
-A recommendation always needs a QUERY VECTOR; only its source changes:
-  1. dataset history  -> engine score_user() (users present in reviews.parquet)
-  2. logged likes     -> weighted avg of liked items' embeddings (new users warm up)
-  3. cold-start prefs -> avg embeddings of top-rated restaurants in stated cuisines
-  4. nothing          -> pure popularity (engine fallback)
-
-The vector feeds the engine's existing cosine -> popularity-hybrid -> rank() path
-(chain dedup, geo filter, rating/pop blend). Everything reads only from this
-folder's artifacts (output_review/, embeddings_i2i/).
-"""
-
 import math
 import numpy as np
 import pandas as pd
@@ -175,13 +159,25 @@ def build_cold_start_vector(prefs):
 
 
 def query_scores(qvec, seen, passes_geo, n_candidates=N_CANDIDATES, allowed=None):
-    """Cosine of a query vector over all item embeddings -> top geo-valid candidates.
+    """Cosine of a query vector over candidate items -> top candidates.
 
-    If `allowed` is given, rank within that set (cuisine/hard-filter) BEFORE
-    truncating, so an explicit cuisine request returns that cuisine ranked by the
-    user's taste - not an empty list because the global top-N were other cuisines.
+    Two-stage retrieval -> ranking: when `allowed` (cuisine / hard-filter / geo
+    subset) is given, cosine is computed ONLY over that subset rather than the full
+    ~80k catalog. This both (a) ranks within the requested cuisine instead of hoping
+    the global top-N contains it, and (b) is much cheaper (e.g. ~3.5k Chinese vs 80k).
     """
     emb, item_ids, id_to_idx = _G["emb"], _G["item_ids"], _G["id_to_idx"]
+
+    if allowed is not None:
+        cand = [(g, id_to_idx[g]) for g in allowed if g in id_to_idx and g not in seen]
+        if not cand:
+            return {}
+        gids = [g for g, _ in cand]
+        scores = cosine_similarity(qvec, emb[[i for _, i in cand]])[0]
+        order = np.argsort(scores)[::-1][:n_candidates]
+        return {gids[k]: float(scores[k]) for k in order}
+
+    # no pre-filter: full-catalog scan, geo via passes_geo
     scores = cosine_similarity(qvec, emb)[0]
     for gid in seen:
         i = id_to_idx.get(gid)
@@ -190,8 +186,6 @@ def query_scores(qvec, seen, passes_geo, n_candidates=N_CANDIDATES, allowed=None
     out = {}
     for i in np.argsort(scores)[::-1]:
         gid = item_ids[i]
-        if allowed is not None and gid not in allowed:
-            continue
         if not passes_geo(gid):
             continue
         out[gid] = float(scores[i])
@@ -210,6 +204,15 @@ def _cuisine_ids(cuisines):
     if not cats:
         return None
     return set(restaurants[restaurants[cats].max(axis=1) > 0]["gmap_id"])
+
+
+def _geo_ids(user_lat, user_lon, max_miles):
+    """gmap_ids within max_miles of the user (vectorized), or None if no geo given."""
+    if user_lat is None or user_lon is None or max_miles is None:
+        return None
+    rl = _G["rest_locs"]
+    d = haversine(user_lat, user_lon, rl["latitude"].values, rl["longitude"].values)
+    return set(rl.index[d <= max_miles])
 
 
 # ── hard filters ──────────────────────────────────────────────────────────────
@@ -295,6 +298,11 @@ def recommend(user_id=None, prefs=None, filters=None,
     cuisine_ids = _cuisine_ids((prefs or {}).get("cuisines"))
     if cuisine_ids is not None:
         allowed = cuisine_ids if allowed is None else (allowed & cuisine_ids)
+    # fold geo into the pre-filter set too, so retrieval scores only the small
+    # in-radius (+cuisine/+filter) subset instead of the whole catalog
+    geo_ids = _geo_ids(user_lat, user_lon, max_miles)
+    if geo_ids is not None:
+        allowed = geo_ids if allowed is None else (allowed & geo_ids)
 
     source = "popularity"
     # 1. dataset history

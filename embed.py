@@ -172,17 +172,6 @@
 # if __name__ == "__main__":
 #     build_embeddings() 
 
-
-"""
-embed.py
-Builds rich item embeddings for each restaurant by combining:
-  - Text embeddings (name + description + aggregated review text) via all-MiniLM-L6-v2
-  - Structured features (category, price, misc flags, topic distributions)
-Saves:
-  - embeddings_i2i/item_embeddings.npy   : combined vectors (N, D)
-  - embeddings_i2i/item_embedding_ids.npy: gmap_ids in same order
-"""
-
 import numpy as np
 import pandas as pd
 from pathlib import Path

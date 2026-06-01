@@ -1,29 +1,3 @@
-"""
-train_i2i_chain.py
-CONTENT-supervised deep item encoder optimized for CHAIN / brand identity.
-
-Goal:
-  Improve the chain metrics (recommending the same brand a user liked). A chain
-  hit is essentially a NAME match, so we train the embedding to make same-brand
-  locations cluster tightly - and, crucially, to push "same cuisine, different
-  brand" apart so brand dominates cuisine in the ranking.
-
-Signal (content, abundant): 4,626 multi-location chains / 35,941 restaurants.
-  positive      = two restaurants with the same normalized name (same brand)
-  hard negative = a restaurant in the same category but a DIFFERENT brand
-                  (added as an explicit extra negative beyond in-batch negatives)
-
-Architecture: the proven residual encoder (output = normalize(x + gate*delta(x)))
-  + anchor loss, so we refine the frozen content space rather than overwrite it.
-
-Tradeoff: this is the opposite objective to train_i2i_content.py (cuisine), so
-  expect category metrics to drop as chain metrics rise - they are in tension.
-
-Run:
-  python train_i2i_chain.py
-  I2I_EMBED_DIR=embeddings_i2i_chain python eval_i2i.py
-"""
-
 import ast
 import numpy as np
 import pandas as pd

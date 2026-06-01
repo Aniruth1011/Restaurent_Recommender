@@ -1,11 +1,3 @@
-"""
-eval_i2i.py
-Evaluation script for item-to-item recommender.
-Primary metric: chain hit rate (realistic for geo-distributed chains)
-Secondary:      strict hit rate, NDCG, precision, recall
-Soft metrics:   category match, rating quality, diversity
-"""
-
 import numpy as np
 import pandas as pd
 from pathlib import Path

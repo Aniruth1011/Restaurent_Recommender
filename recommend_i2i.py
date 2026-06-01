@@ -1,15 +1,3 @@
-"""
-recommend_i2i.py
-Item-to-item recommendation using combined text + structured embeddings.
-
-Inference flow:
-  1. Take user's liked restaurants from train (rating >= 4)
-  2. Weighted average of their embeddings (weight = rating * recency_weight)
-  3. Cosine similarity against all item embeddings
-  4. Geo filter within max_miles of user centroid
-  5. Rerank by similarity + popularity
-"""
-
 import os
 import numpy as np
 import pandas as pd

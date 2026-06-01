@@ -1,9 +1,3 @@
-"""
-eval_popularity_baseline.py
-Popularity baseline: recommend highest rated restaurants near user.
-No personalization — just rating + review count + location.
-Compare against i2i model to show personalization adds value.
-"""
 
 import numpy as np
 import pandas as pd

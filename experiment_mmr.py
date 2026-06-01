@@ -1,25 +1,3 @@
-"""
-experiment_mmr.py
-Ablation harness for the I2I recommender, optimised for CHAIN metrics.
-
-Sweeps every combination of:
-  candidate_mode : avg (weighted-average vector) | qe (weighted query expansion)
-  use_hybrid     : True (I2I + popularity alpha-blend) | False (pure I2I)
-  reranking      : no-mmr | mmr @ lambda in {1.0, 0.9, 0.7, 0.5}
-plus a pure-popularity baseline as the floor.
-
-All configs are evaluated on the SAME sampled users with identical metrics
-(reused from eval_i2i.py). Per-user I2I scores are cached per candidate_mode
-so the expensive cosine pass runs at most twice per user, not once per config.
-
-Usage:
-    python experiment_mmr.py                # full run, N_USERS=500
-    python experiment_mmr.py 50             # quick smoke on 50 users
-    python experiment_mmr.py 500 10         # 500 users, K=10
-Outputs: prints a comparison table (sorted by chain NDCG) and writes
-         experiment_results.csv
-"""
-
 import sys
 import numpy as np
 import pandas as pd

@@ -39,6 +39,36 @@ relevant cuisines, while keeping recommendation quality high (avg rating 4.4,
 
 ---
 
+## Performance
+
+Operational metrics from `benchmark.py` (in-process serving path, 150 mixed
+requests, single-threaded, CPU):
+
+| Metric | Value |
+|---|---|
+| Latency (mean / p50) | 316 ms / 304 ms |
+| Latency (p95 / p99 / max) | 463 / 609 / 619 ms |
+| Throughput | 3.2 req/s (single-threaded) |
+| Model load (cold start) | 0.44 s |
+| Embedding matrix | 80,636 × 567 = 183 MB (float32) |
+| Peak RSS | 767 MB |
+| Empty / error rate | 0% / 0% |
+
+Per request type: cold-start 217 ms, cuisine+filter 309 ms, history 444 ms.
+
+**Optimization:** initial latency was ~1.8 s/req. Two changes brought it to
+~316 ms (**5.8×**, 0.5 → 3.2 req/s) with no model change:
+1. **Vectorized geo filter** — compute haversine over the whole catalog once
+   (numpy) instead of a per-row pandas lookup over all 80K rows.
+2. **Two-stage retrieval → ranking** — when a cuisine/filter/geo is active, cosine
+   scores only that pre-filtered subset (e.g. ~3.5K vs 80K), not the full catalog.
+
+```bash
+I2I_EMBED_DIR=embeddings_i2i_content python benchmark.py
+```
+
+---
+
 ## Features
 
 - **Personalized I2I recommendations** — taste vector from a user's liked

@@ -33,10 +33,6 @@ together. It is the best model for general cuisine-match discovery.
 relevant cuisines, while keeping recommendation quality high (avg rating 4.4,
 86% of picks rated ≥ 4.0).
 
-> Note: with a median of ~1 review per user this dataset is cold-start dominated,
-> so exact next-item Hit Rate is ~0 for all models; chain (same brand) and
-> category (same cuisine) are the meaningful relevance proxies.
-
 ---
 
 ## Performance

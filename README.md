@@ -1,7 +1,7 @@
 # TableMind — Restaurant Recommender
 
 An item-to-item (I2I) restaurant recommender with cuisine steering, cold-start
-handling, and group recommendations. Served via a FastAPI backend and a Gradio
+handling, with focus on group recommendations. Served via a FastAPI backend and a Gradio
 demo UI.
 
 The recommender represents every restaurant as a learned embedding and matches a
@@ -12,10 +12,10 @@ similarity, then applies geo, popularity, and quality reranking.
 
 ## Deployed model
 
-The deployed embedding is the **content (cuisine) encoder** — a residual MLP
+The deployed embedding is a **content (cuisine) encoder** — a residual MLP
 trained on restaurant content (text + structured features) with a category-
 supervised contrastive objective, so restaurants in the same cuisine cluster
-together. It is the best model for general cuisine-match discovery.
+together. It is the best model obtained for general cuisine-match discovery.
 
 ### Metrics (`eval_i2i.py`, 303 evaluation users, K=20)
 
@@ -28,7 +28,7 @@ together. It is the best model for general cuisine-match discovery.
 | Recall@20 | 0.0749 |
 | NDCG@20 | 0.0424 |
 
-**Headline:** the content encoder lifts ranked cuisine relevance (Category NDCG)
+The content encoder lifts ranked cuisine relevance (Category NDCG)
 **+32%** over the frozen baseline (1.70 → 2.25) and covers **90%** of the user's
 relevant cuisines, while keeping recommendation quality high (avg rating 4.4,
 86% of picks rated ≥ 4.0).

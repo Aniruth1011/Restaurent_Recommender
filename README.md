@@ -101,21 +101,6 @@ I2I_EMBED_DIR=embeddings_i2i_chain  ./start.sh    # brand/chain model
 # (default: embeddings_i2i_content — the deployed cuisine model)
 ```
 
----
-
-## How it works
-
-1. **Item embeddings** — each restaurant → a content vector (frozen MiniLM text +
-   structured features), refined by the trained content encoder.
-2. **User vector** — rating- and recency-weighted average of the embeddings of the
-   restaurants a user liked (rating ≥ 4).
-3. **Retrieve** — cosine similarity of the user vector against all items; restrict
-   to requested cuisine / filters; geo-filter by distance.
-4. **Rank** — blend similarity with popularity (cold-start `alpha`), then rerank by
-   similarity + rating + popularity, dedupe chains, return top-N.
-
----
-
 ## Evaluate
 
 ```bash
@@ -123,18 +108,4 @@ python eval_i2i.py                                          # frozen baseline
 I2I_EMBED_DIR=embeddings_i2i_content python eval_i2i.py         # deployed content model
 I2I_EMBED_DIR=embeddings_i2i_content python eval_collaborative.py 2   # dense users
 ```
-
----
-
-## Project layout
-
-| Path | Role |
-|---|---|
-| `api.py`, `serving.py`, `recommend_engine.py` | FastAPI serving stack |
-| `demo.py`, `start.sh` | Gradio UI + launcher |
-| `embed.py` | Builds the base content embeddings |
-| `train_i2i_content.py` | Trains the deployed cuisine encoder |
-| `train_i2i_chain.py`, `train_i2i_encoder.py` | Alternative encoders (brand / interaction) |
-| `eval_i2i.py`, `eval_collaborative.py` | Evaluation |
-
 

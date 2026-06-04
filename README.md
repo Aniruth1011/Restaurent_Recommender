@@ -24,9 +24,9 @@ together. It is the best model obtained for general cuisine-match discovery.
 | Category Hit@20 | **0.9769** |
 | Category Recall@20 | **0.9001** |
 | Category NDCG@20 | **2.2485** |
-| Hit@20 | 0.0792 |
-| Recall@20 | 0.0749 |
-| NDCG@20 | 0.0424 |
+| Hit@20 | 0.1667 |
+| Recall@20 | 0.1361 |
+| NDCG@20 | 0.1010 |
 
 The content encoder lifts ranked cuisine relevance (Category NDCG)
 **+32%** over the frozen baseline (1.70 → 2.25) and covers **90%** of the user's

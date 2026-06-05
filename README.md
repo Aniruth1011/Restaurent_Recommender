@@ -1,4 +1,4 @@
-# TableMind — Restaurant Recommender
+# TableMind — Restaurant Recommender for California
 
 An item-to-item (I2I) restaurant recommender with cuisine steering, cold-start
 handling, with focus on group recommendations. Served via a FastAPI backend and a Gradio
